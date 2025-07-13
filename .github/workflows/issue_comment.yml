@@ -11,14 +11,28 @@ jobs:
       - name: "show github context"
         run: echo '${{ toJSON(github.event) }}' | jq
         shell: bash
-      - name: Create Comment
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: This comment was written by a bot!
+  
+      - name: Create comment
+        if: steps.fc.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ github.event.issue.number }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
-            This is a multi-line test comment
-            - With GitHub **Markdown** :sparkles:
-            - Created by [create-or-update-comment][1]
-
-            [1]: https://github.com/peter-evans/create-or-update-comment
-          reactions: '+1'
+            This comment was written by a bot!
+          reactions: rocket
+  
+      - name: Update comment
+        if: steps.fc.outputs.comment-id != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: |
+            This comment has been updated!
+          reactions: hooray
