@@ -1,3 +1,3 @@
 # gitactionfun
 
-## This repo is for Github Action fun! YAY
+## This repository is for GitHub Action fun! YAY
