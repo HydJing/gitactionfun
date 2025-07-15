@@ -1,34 +1,41 @@
-name: Create a comment on new issue
+name: Create or Update Comment on New Issue
 
 on:
   issues:
-    types: [opened]
+    types: [opened] # This workflow runs when a new issue is opened
 
 jobs:
   comment-with-action:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # Grant write permission for issues to allow creating/updating comments
+      pull-requests: write # Good practice to include if you might expand to PRs later, but 'issues: write' is key here
     steps:
-      - name: "show github context"
+      - name: "Show GitHub Context"
         run: echo '${{ toJSON(github.event) }}' | jq
         shell: bash
+      
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: fc
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ github.event.issue.number }} 
           comment-author: 'github-actions[bot]'
           body-includes: This comment was written by a bot!
-  
+      
       - name: Create comment
+        # This step runs if no existing comment by the bot with the specific body is found
         if: steps.fc.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          # CORRECTED: Use github.event.issue.number for issue events
+          issue-number: ${{ github.event.issue.number }} 
           body: |
             This comment was written by a bot!
           reactions: rocket
-  
+      
       - name: Update comment
+        # This step runs if an existing comment by the bot with the specific body is found
         if: steps.fc.outputs.comment-id != ''
         uses: peter-evans/create-or-update-comment@v4
         with:
